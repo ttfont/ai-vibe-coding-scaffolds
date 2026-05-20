@@ -1,0 +1,230 @@
+schema: spec-driven
+
+# 参考真文档：这是 fulai-boot 当前采用的“高约束、强提示”版本 OpenSpec 配置。
+# 用途：
+# 1. 作为查看样板，理解强约束版配置如何写到足够细。
+# 2. 作为抽取通用规范时的素材库。
+# 3. 在某些项目中，如果轻模板效果不稳定，可回退到这种高密度配置。
+context: |
+  language: 中文（简体）
+    所有产出物必须用简体中文撰写。
+  project:
+    name: fulai-boot
+    package_base: com.fulai.plan
+    java_version: 17
+    build_tool: Maven
+    module_style: Maven 多模块单体工程
+    description: >
+      fulai-boot 是基于 Spring Boot 3.5.x 的 Java 后端脚手架/业务系统项目。
+      项目采用 Maven 多模块单体架构，提供系统管理、认证授权、文件存储、短信、邮件、日志、字典、参数配置等基础能力，
+      并预留业务模块扩展空间。
+
+  tech_stack:
+    backend:
+      - Spring Boot 3.5.8
+      - Spring Web MVC
+      - Spring Security
+      - Jakarta Validation
+      - MyBatis-Plus 3.5.14
+      - MyBatis XML
+      - Dynamic Datasource
+      - PostgreSQL
+      - Redis / Redisson
+      - Lock4j
+      - Knife4j / Springdoc OpenAPI
+      - Lombok
+      - MapStruct
+      - Hutool
+      - FastExcel
+      - Easy-Trans
+    storage:
+      - Local Storage
+      - MinIO
+      - Aliyun OSS
+      - Tencent COS
+      - Qiniu
+      - Huawei OBS
+    third_party:
+      - Aliyun SMS
+      - Tencent SMS
+      - Qiniu SMS
+      - Huawei SMS
+      - Aliyun Mail
+      - Tencent Mail
+      - JavaMail
+      - JustAuth 第三方登录
+    deploy:
+      - Docker
+      - Docker Compose
+      - PostgreSQL
+      - Redis
+      - EMQX 可选
+
+  architecture:
+    overview: >
+      项目采用“基础框架模块 + 系统业务模块 + API 抽象模块 + 启动模块 + 业务扩展模块”的多模块单体结构，
+      不是 Spring Cloud 微服务架构。模块之间通过 Maven 依赖组合。
+    modules:
+      fulai-framework:
+        role: 基础框架层
+        responsibilities:
+          - 统一响应 Result 与分页 PageResult
+          - 全局异常处理
+          - Redis 缓存封装
+          - Jackson、CORS、XSS 等通用配置
+          - MyBatis-Plus 基础 DAO、BaseEntity、BaseService、BaseServiceImpl
+          - 数据权限拦截
+          - Spring Security Token 认证过滤器
+          - 操作日志注解与切面
+          - Excel、日期、IP、JSON、树结构等工具能力
+      fulai-boot-api:
+        role: 模块间 API 抽象层
+        responsibilities:
+          - 定义跨模块调用接口
+          - 当前包含短信和存储相关 API 抽象
+      fulai-boot-system:
+        role: 系统管理业务层
+        responsibilities:
+          - 用户、角色、菜单、机构、岗位管理
+          - 字典、参数配置
+          - 登录日志、操作日志
+          - 文件上传与附件管理
+          - 短信配置、短信日志
+          - 邮件配置、邮件日志
+          - 第三方登录配置与回调
+          - 认证授权、手机号登录、第三方登录
+          - 存储服务实现
+      fulai-boot-new:
+        role: 新业务扩展模块
+        responsibilities:
+          - 放置新增业务模块代码
+          - 新业务优先在该模块或独立业务模块中扩展，不直接污染 framework
+      fulai-server:
+        role: 应用启动模块
+        responsibilities:
+          - ServerApplication 启动入口
+          - Swagger / OpenAPI 配置
+          - application.yml 与多环境配置
+          - 聚合 system 与业务模块依赖
+
+  package_conventions:
+    root_package: com.fulai.plan
+    standard_layers:
+      controller: REST 接口层，只负责参数接收、权限注解、日志注解、调用 Service、返回 Result
+      service: 业务接口层，定义业务方法
+      service_impl: 业务实现层，承载事务、业务编排、数据转换、调用 DAO
+      dao: MyBatis-Plus Mapper 接口，继承 BaseDao
+      entity: 数据库表映射对象，继承 BaseEntity
+      query: 查询参数对象，分页查询继承 Query
+      vo: 接口入参与出参对象，使用 Swagger Schema 和 Validator 注解
+      convert: MapStruct 转换器，负责 Entity、VO、ExcelVO、UserDetail 等转换
+      resources_mapper: MyBatis XML 文件目录，路径为 src/main/resources/mapper
+
+  rule_scope:
+    default:
+      - 普通业务模块、数据管理类接口默认遵循 Controller、Service、DAO、Entity、VO、Query、Convert、XML 成套生成规则。
+      - 普通业务接口必须优先遵循分页、Result、权限点、操作日志、PostgreSQL 等统一规范。
+    framework_exceptions:
+      description: 框架类、认证类、安全类、网关类、基础设施类改造允许不套用普通业务 CRUD 规范。
+      applies_to:
+        - JWT 认证逻辑
+        - Spring Security 配置
+        - Token 生成、校验、刷新、缓存
+        - 登录认证过滤器
+        - 权限拦截器
+        - 数据权限拦截器
+        - 全局异常处理
+        - Redis 缓存封装
+        - Jackson、CORS、XSS 等通用配置
+      rules:
+        - 应优先分析现有链路和配置关系。
+        - 不要求 Controller、Service、DAO、Entity、VO、Query、Convert、XML 成套出现。
+        - 修改安全框架时必须说明影响范围、兼容策略和回滚方式。
+
+  coding_style:
+    general:
+      - 保持项目现有代码风格，优先模仿已有 system 模块代码。
+      - 使用中文注释说明业务含义，避免过度注释实现细节。
+      - 类和方法命名保持直白，不要为了显得高级而制造复杂抽象。
+      - 禁止在 Controller 或 Service 中拼接复杂 SQL，复杂查询应放在 Mapper XML。
+
+    controller_rules:
+      - 使用 @RestController。
+      - @RequestMapping 必须遵循 API URI 规范。
+      - 所有普通接口统一返回 Result<T>。
+      - 分页接口统一返回 Result<PageResult<VO>>。
+      - 需要权限控制时使用 @PreAuthorize("hasAuthority('模块:资源:操作')")。
+      - 需要记录操作日志时使用 @OperateLog(type = OperateTypeEnum.xxx)。
+
+    query_rules:
+      - 分页查询对象继承 com.fulai.plan.framework.common.query.Query。
+      - 不要生成“查询所有数据”的接口；列表默认必须分页。
+
+    response_rules:
+      - 成功响应使用 Result.ok() 或 Result.ok(data)。
+      - 失败响应使用 Result.error(message) 或 Result.error(ErrorCode.xxx)。
+      - 不直接返回 Map、JSONObject 或裸对象。
+
+    security_rules:
+      - 使用 Spring Security 无状态 Token 模式。
+      - 公开接口必须进入 auth.yml 或 PermitResource 白名单。
+      - 普通业务接口默认需要认证。
+
+    mybatis_plus_rules:
+      - 每个 Dao 接口必须保留对应的 Mapper XML 文件，Dao 与 XML 必须一一对应。
+      - 即使当前没有自定义 SQL，也必须创建空的 Mapper XML，用于后续扩展。
+
+  api_design_rules:
+    uri:
+      - URI 全部使用小写字母。
+      - 禁止使用中横线、下划线、驼峰命名。
+      - 路径尽量不超过四级；超过四级时，应重新审视资源边界。
+    pagination:
+      - 默认所有列表接口都必须分页。
+      - limit 最大值不超过 1000。
+    compatibility:
+      - 不随意改变已有接口路径。
+      - 不随意改变 Result、PageResult 结构。
+
+  postgresql_conventions:
+    database: PostgreSQL
+    naming:
+      - 表名使用小写下划线。
+      - 字段名使用小写下划线。
+    logic_delete:
+      rule: 统一使用 deleted 字段，禁止物理删除。
+    foreign_key_rules:
+      - 严禁使用数据库外键约束 FOREIGN KEY。
+      - 关联关系在 Service 层维护。
+
+  openspec_workflow:
+    propose_stage:
+      goals:
+        - 先分析现有模块、表结构、接口风格和权限点。
+        - 先输出设计方案，再生成变更规格。
+      must_not:
+        - 不要直接进入编码。
+    apply_stage:
+      goals:
+        - 严格按已通过的 OpenSpec 变更实施。
+      must_not:
+        - 不要在 apply 阶段扩大需求范围。
+        - 不要重构无关代码。
+
+  ai_generation_preferences:
+    style: 像项目组 senior 后端工程师写的代码，克制、清晰、稳定、少炫技。
+    priorities:
+      - 先保持一致性，再考虑抽象。
+      - 先保证可维护，再追求简洁。
+      - 先尊重现有项目风格，再引入新写法。
+
+  quality_checks:
+    before_finish:
+      - 是否符合 Maven 多模块依赖关系。
+      - 是否统一返回 Result 或 PageResult。
+      - 是否处理权限点和操作日志。
+      - 是否避免全量查询。
+      - 是否符合 API URI 规范。
+      - 是否符合 PostgreSQL 规范。
+      - 是否没有泄露敏感信息。
+      - 是否没有无关重构。

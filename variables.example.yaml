@@ -1,0 +1,32 @@
+project:
+  PROJECT_NAME: fulai-boot
+  PROJECT_TYPE: Maven 多模块单体后端项目
+  PROJECT_SUMMARY: 基于 Spring Boot 3.5.x 的后端脚手架/业务系统，提供系统管理、认证授权、日志审计、文件存储、短信邮件和业务扩展能力
+  PRIMARY_LANGUAGE: Java
+  RUNTIME_VERSION: "17"
+  PACKAGE_BASE: com.fulai.plan
+
+stack:
+  BACKEND_STACK: Spring Boot 3.5.8, Spring Security, MyBatis-Plus 3.5.14, PostgreSQL, Redis/Redisson, Lombok, MapStruct
+  FRONTEND_STACK: 当前未发现前端工程目录；若后续补充，默认按 React 18 + TypeScript 5 + Vite 建模
+  FRONTEND_STACK_BASELINE: React 18 + TypeScript 5 + Vite
+
+structure:
+  MODULE_LIST: fulai-framework, fulai-boot-api, fulai-boot-system, fulai-boot-new, fulai-server
+  MODULE_A: fulai-framework
+  MODULE_A_DESC: 基础框架层，负责统一响应、异常处理、缓存、通用配置、安全认证、数据权限、日志切面与基础工具
+  MODULE_B: fulai-boot-system
+  MODULE_B_DESC: 系统管理业务层，包含用户、角色、菜单、字典、参数、日志、认证、上传、短信、邮件、第三方登录等能力
+  MODULE_C: fulai-server
+  MODULE_C_DESC: 启动与聚合入口，负责聚合依赖与运行配置
+  DOMAIN_LIST: 认证授权, 系统管理, 审计日志, 文件存储, 消息通知
+
+validation:
+  BACKEND_VALIDATION_COMMAND: mvn test
+  FRONTEND_VALIDATION_COMMAND: npm run lint && npm run build
+  OPENSPEC_VALIDATION_COMMAND: openspec validate <change-id> --strict
+
+governance:
+  GATEWAY_RULES: 当前无统一前端网关；若后续接入前端，需明确是否统一走后端 gateway
+  LOCAL_ENV_BASELINE: 当前以本地 Maven 多模块启动和 Docker Compose 配套环境为主
+  REPOSITORY_CONSTRAINTS: 新业务优先放 fulai-boot-new 或独立业务模块，不写进 fulai-framework
