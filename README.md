@@ -1,6 +1,6 @@
 # Project Template
 
-AI 编程规范最强模板，Vibe Coding最佳伴侣。
+AI 编程规范最强模板，Vibe Coding 最佳伴侣。
 
 这是一套可直接复制到新项目的模板包，包含：
 
